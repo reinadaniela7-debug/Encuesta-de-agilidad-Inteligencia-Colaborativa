@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Postula tu proyecto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one centered form column (max 760px) with a sticky matrix aside on wide screens; admin list as a second view */
+:root{
+  --bg:#F6F7F9; --surface:#FFFFFF; --ink:#14213D; --muted:#5A6472; --line:#DDE2E9;
+  --navy:#0A1F5C; --blue:#0B4AA2; --sky:#BCD4EE; --mist:#E3E7ED; --orange:#E8912D;
+  --ok:#1E7A4C; --ok-bg:#E3F3EA; --warn:#9A5B00; --warn-bg:#FCEFD9;
+  --display:'IBM Plex Sans Condensed','Arial Narrow',Arial,sans-serif;
+  --body:'IBM Plex Sans',Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1424; --surface:#161E33; --ink:#E8EDF5; --muted:#A3AEBF; --line:#2A3550;
+  --navy:#9EC1E8; --blue:#7FB0EC; --sky:#2B4A7A; --mist:#222C44; --orange:#F2A541;
+  --ok:#7FD3A4; --ok-bg:#16382A; --warn:#F2C073; --warn-bg:#3A2C12; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1424; --surface:#161E33; --ink:#E8EDF5; --muted:#A3AEBF; --line:#2A3550;
+  --navy:#9EC1E8; --blue:#7FB0EC; --sky:#2B4A7A; --mist:#222C44; --orange:#F2A541;
+  --ok:#7FD3A4; --ok-bg:#16382A; --warn:#F2C073; --warn-bg:#3A2C12; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+header{display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-family:var(--display);font-weight:600;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(30px,5vw,44px);line-height:1.05;margin:0;color:var(--navy);text-wrap:balance}
+.lede{color:var(--muted);max-width:64ch;margin:0}
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--line)}
+.tabs button{font:600 15px var(--body);color:var(--muted);background:none;border:0;padding:10px 14px;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--navy);border-bottom-color:var(--navy)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:28px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+form{display:flex;flex-direction:column;gap:20px;min-width:0}
+fieldset{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:22px;margin:0;display:flex;flex-direction:column;gap:18px;min-width:0}
+legend{font-family:var(--display);font-weight:700;font-size:20px;color:var(--navy);padding:0 6px}
+.hint{font-size:14px;color:var(--muted);margin:-8px 0 0}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:15px}
+label.f span.opt{font-weight:400;color:var(--muted)}
+input[type=text],textarea,select{font:16px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%}
+textarea{min-height:92px;resize:vertical}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:560px){.row2{grid-template-columns:1fr}}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;background:var(--mist);color:var(--ink);border-radius:999px;padding:5px 10px}
+.chip button{border:0;background:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0}
+.choice{display:flex;flex-wrap:wrap;gap:8px}
+.choice label{cursor:pointer}
+.choice input{position:absolute;opacity:0;pointer-events:none}
+.choice span{display:inline-block;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 12px;font-size:15px}
+.choice input:checked+span{background:var(--navy);border-color:var(--navy);color:var(--surface)}
+.choice input:focus-visible+span{outline:3px solid var(--blue);outline-offset:2px}
+.q{display:flex;flex-direction:column;gap:8px;padding-top:14px;border-top:1px solid var(--line)}
+.q:first-of-type{border-top:0;padding-top:0}
+.q p{margin:0;font-weight:500}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.scale label{cursor:pointer}
+.scale input{position:absolute;opacity:0;pointer-events:none}
+.scale span{display:block;text-align:center;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 0;font-weight:600;font-variant-numeric:tabular-nums}
+.scale input:checked+span{background:var(--blue);border-color:var(--blue);color:#FFFFFF}
+.scale input:focus-visible+span{outline:3px solid var(--blue);outline-offset:2px}
+.ends{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+aside.side{position:sticky;top:max(16px,env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.card h2{font-family:var(--display);font-size:18px;margin:0;color:var(--navy)}
+.zone{font-family:var(--display);font-weight:700;font-size:22px}
+.crit{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.crit li{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.pill{flex:none;font-size:12px;font-weight:700;border-radius:999px;padding:2px 8px;letter-spacing:.02em}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.no{background:var(--warn-bg);color:var(--warn)}
+.pill.na{background:var(--mist);color:var(--muted)}
+.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.btn{font:600 16px var(--body);border-radius:8px;padding:12px 20px;cursor:pointer;border:1px solid var(--navy)}
+.btn.primary{background:var(--navy);color:var(--surface)}
+.btn.ghost{background:transparent;color:var(--navy)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.msg{font-size:15px}
+.msg.err{color:var(--warn)}
+.done{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:28px;display:flex;flex-direction:column;gap:12px;max-width:760px}
+.done h2{font-family:var(--display);font-size:28px;margin:0;color:var(--navy)}
+svg text{font-family:var(--body)}
+/* admin */
+.toolbar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+.stats{display:flex;gap:24px;flex-wrap:wrap}
+.stat b{display:block;font-family:var(--display);font-size:30px;color:var(--navy);font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.zt{font-weight:700}
+.empty{padding:28px;color:var(--muted);text-align:center}
+.adminGrid{display:grid;grid-template-columns:320px minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:900px){.adminGrid{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Agilidad EP · Inteligencia colaborativa</div>
+    <h1>Postula un proyecto para una célula ágil</h1>
+    <p class="lede">Buscamos proyectos reales que involucren a varias áreas, se puedan resolver en 100 días y estén en la zona compleja de la matriz de Stacey. Con las postulaciones armamos una lista de 20 y en el próximo comité votamos cuáles intervenir.</p>
+  </header>
+
+  <section id="viewForm">
+    <div class="grid">
+      <form id="f" novalidate>
+        <fieldset>
+          <legend>1 · El proyecto</legend>
+          <label class="f" for="nombre">Nombre del proyecto
+            <input type="text" id="nombre" maxlength="120" placeholder="Ej.: Reducir el tiempo de aprobación de compras menores en plantas">
+          </label>
+          <label class="f" for="problema">¿Qué problema resuelve hoy?
+            <textarea id="problema" maxlength="1200" placeholder="Describe la situación actual, a quién afecta y qué se gana si se resuelve."></textarea>
+          </label>
+          <div class="row2">
+            <label class="f" for="localidad">Localidad
+              <select id="localidad">
+                <option value="">Selecciona…</option>
+                <option>CEP</option><option>Planta</option><option>Centro logístico</option><option>Oficina de ventas</option><option>Varias localidades</option>
+              </select>
+            </label>
+            <label class="f" for="sponsor">Gerente o sponsor <span class="opt">quién lo impulsaría</span>
+              <input type="text" id="sponsor" maxlength="120" placeholder="Nombre y gerencia">
+            </label>
+          </div>
+          <label class="f" for="postulante">Tu nombre y gerencia
+            <input type="text" id="postulante" maxlength="120" placeholder="Quién postula">
+          </label>
+          <label class="f" for="areaIn">Áreas involucradas <span class="opt">escribe un área y pulsa Enter</span>
+            <input type="text" id="areaIn" maxlength="60" placeholder="Ej.: Compras, Finanzas, Planta, Tecnología">
+          </label>
+          <div class="chips" id="areas" aria-live="polite"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>2 · Alcance</legend>
+          <div class="f" role="group" aria-labelledby="lblInv">
+            <b id="lblInv" style="font-size:15px">¿Requiere inversión adicional?</b>
+            <div class="choice">
+              <label><input type="radio" name="inversion" value="no"><span>No, con lo que ya tenemos</span></label>
+              <label><input type="radio" name="inversion" value="menor"><span>Algo menor</span></label>
+              <label><input type="radio" name="inversion" value="alta"><span>Sí, una inversión importante</span></label>
+            </div>
+          </div>
+          <div class="f" role="group" aria-labelledby="lblDur">
+            <b id="lblDur" style="font-size:15px">¿En cuánto tiempo se podría resolver?</b>
+            <div class="choice">
+              <label><input type="radio" name="duracion" value="1"><span>Menos de 1 mes</span></label>
+              <label><input type="radio" name="duracion" value="3"><span>Entre 1 y 3 meses</span></label>
+              <label><input type="radio" name="duracion" value="6"><span>Más de 3 meses</span></label>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset id="fsC">
+          <legend>3 · Claridad del proceso</legend>
+          <p class="hint">1 = totalmente claro · 5 = no tenemos idea</p>
+        </fieldset>
+
+        <fieldset id="fsA">
+          <legend>4 · Alineación en los objetivos</legend>
+          <p class="hint">1 = todos queremos lo mismo · 5 = intereses opuestos</p>
+        </fieldset>
+
+        <div class="actions">
+          <button class="btn primary" type="submit" id="send">Enviar postulación</button>
+          <span class="msg" id="msg" role="status"></span>
+        </div>
+      </form>
+
+      <aside class="side" aria-label="Ubicación del proyecto">
+        <div class="card">
+          <h2>Dónde cae tu proyecto</h2>
+          <div id="miniMatrix"></div>
+          <div class="zone" id="zoneName">Responde las preguntas 3 y 4</div>
+          <p class="hint" style="margin:0" id="zoneTxt">El punto se mueve con tus respuestas.</p>
+        </div>
+        <div class="card">
+          <h2>Criterios</h2>
+          <ul class="crit" id="crit"></ul>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="viewDone" hidden>
+    <div class="done">
+      <div class="eyebrow">Postulación recibida</div>
+      <h2 id="doneTitle">Gracias</h2>
+      <p id="doneTxt" style="margin:0;color:var(--muted)"></p>
+      <div class="actions"><button class="btn ghost" type="button" id="again">Postular otro proyecto</button></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+const QC=["¿Sabemos qué pasos seguir para resolverlo?","¿Lo hemos hecho antes aquí o en otro lugar?","¿Podemos predecir el resultado y cuánto tardará?","¿Tenemos los datos y el conocimiento técnico necesarios?"];
+const QA=["¿Las áreas están de acuerdo en qué problema resolver?","¿Coinciden en qué sería un buen resultado?","¿Las prioridades o los KPI de cada área chocan entre sí?","¿Hay un sponsor que todas las áreas reconozcan?"];
+// For C questions a "yes" means clear (low score); the scale is always expressed as lack of clarity / alignment.
+const ENDS_C=[["Sí, claramente","No, ni idea"],["Sí, muchas veces","Nunca"],["Sí, con precisión","Imposible de predecir"],["Sí, todo","Nos falta casi todo"]];
+const ENDS_A=[["Sí, totalmente","Nada de acuerdo"],["Sí, totalmente","Visiones opuestas"],["No chocan","Chocan mucho"],["Sí, uno claro","No hay sponsor"]];
+const $=id=>document.getElementById(id);
+const state={areas:[],items:[]};
+
+function buildQs(fs,qs,ends,prefix){
+  qs.forEach((q,i)=>{
+    const d=document.createElement('div');d.className='q';d.setAttribute('role','group');
+    const p=document.createElement('p');p.id=prefix+i+'l';p.textContent=q;d.appendChild(p);d.setAttribute('aria-labelledby',p.id);
+    const s=document.createElement('div');s.className='scale';
+    for(let v=1;v<=5;v++){const l=document.createElement('label');const inp=document.createElement('input');inp.type='radio';inp.name=prefix+i;inp.value=v;inp.id=prefix+i+'_'+v;inp.setAttribute('aria-label',q+' '+v);const sp=document.createElement('span');sp.textContent=v;l.append(inp,sp);s.appendChild(l)}
+    const e=document.createElement('div');e.className='ends';const a=document.createElement('span');a.textContent=ends[i][0];const b=document.createElement('span');b.textContent=ends[i][1];e.append(a,b);
+    d.append(s,e);fs.appendChild(d);
+  });
+}
+buildQs($('fsC'),QC,ENDS_C,'c');buildQs($('fsA'),QA,ENDS_A,'a');
+
+function val(name){const el=document.querySelector('input[name="'+name+'"]:checked');return el?Number(el.value)||el.value:null}
+function scores(prefix){const out=[];for(let i=0;i<4;i++){out.push(val(prefix+i))}return out}
+function avg(a){const v=a.filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null}
+function zoneOf(c,a){
+  if(c==null||a==null)return null;
+  const x=(c-1)/4,y=(a-1)/4,d=Math.hypot(x,y);
+  if(d<0.3)return 'Simple'; if(d<0.5)return 'Complicado'; if(d<0.85)return 'Complejo'; return 'Caos';
+}
+const ZTXT={Simple:'Claro y alineado: basta un procedimiento o un área sola. No necesita una célula.',Complicado:'Lo resuelve un experto o una negociación. Puede no necesitar una célula.',Complejo:'Objetivo compartido, el cómo por descubrir: es el tipo de proyecto que buscamos.',Caos:'Ni claridad ni acuerdo: primero hay que estabilizar. Difícil de resolver en 100 días.'};
+
+// Matrix drawing (same geometry as the comité deck): origin bottom-left, radial bands.
+function matrixSVG(points,size){
+  const S=size,pad=8,o={x:pad,y:S-pad},W=S-2*pad;
+  const R=[0.3,0.5,0.85].map(k=>k*W);
+  const arc=r=>`M${o.x} ${o.y} L${o.x} ${o.y-r} A${r} ${r} 0 0 1 ${o.x+r} ${o.y} Z`;
+  let s=`<svg viewBox="0 0 ${S} ${S}" width="100%" role="img" aria-label="Matriz de Stacey con la ubicación de los proyectos" style="max-width:${S}px;display:block">`;
+  s+=`<rect x="${o.x}" y="${pad}" width="${W}" height="${W}" fill="var(--mist)"/>`;
+  s+=`<path d="${arc(R[2])}" fill="var(--navy)" opacity=".9"/><path d="${arc(R[1])}" fill="var(--sky)"/><path d="${arc(R[0])}" fill="var(--surface)"/>`;
+  s+=`<text x="${o.x+6}" y="${o.y-8}" font-size="12" font-weight="600" fill="var(--ink)">Simple</text>`;
+  s+=`<text x="${o.x+R[0]*0.72+4}" y="${o.y-R[0]*0.72-4}" font-size="12" font-weight="600" fill="var(--ink)">Complicado</text>`;
+  s+=`<text x="${o.x+R[1]*0.78+10}" y="${o.y-R[1]*0.78-14}" font-size="14" font-weight="700" fill="var(--surface)">COMPLEJO</text>`;
+  s+=`<text x="${S-pad-6}" y="${pad+18}" font-size="13" font-weight="700" text-anchor="end" fill="var(--muted)">CAOS</text>`;
+  s+=`<path d="M${o.x} ${o.y} H${S-pad} M${o.x} ${o.y} V${pad}" stroke="var(--ink)" stroke-width="1.5" fill="none"/>`;
+  points.forEach((p,i)=>{const cx=o.x+(p.c-1)/4*W,cy=o.y-(p.a-1)/4*W;s+=`<circle cx="${cx}" cy="${cy}" r="${p.label?9:8}" fill="var(--orange)" stroke="var(--surface)" stroke-width="2"/>`;if(p.label)s+=`<text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="10" font-weight="700" fill="#14213D">${p.label}</text>`});
+  s+=`</svg><div class="ends" style="margin-top:4px"><span>↑ Falta de alineación</span><span>Falta de claridad →</span></div>`;
+  return s;
+}
+
+function criteria(){
+  const c=avg(scores('c')),a=avg(scores('a'));const z=zoneOf(c,a);
+  const inv=val('inversion'),dur=val('duracion');
+  return {
+    multiarea: state.areas.length? state.areas.length>=3 : null,
+    recursos: inv? inv!=='alta' : null,
+    dias100: dur? Number(dur)<=3 : null,
+    complejo: z? z==='Complejo' : null,
+    c,a,z
+  };
+}
+const CRIT=[['multiarea','Multiárea: 3 o más áreas'],['recursos','Recursos acotados'],['dias100','Se resuelve en 100 días'],['complejo','Zona compleja de Stacey']];
+function pill(v){return v===true?'<span class="pill ok">Cumple</span>':v===false?'<span class="pill no">No cumple</span>':'<span class="pill na">Pendiente</span>'}
+function renderSide(){
+  const k=criteria();
+  $('miniMatrix').innerHTML=matrixSVG(k.c!=null&&k.a!=null?[{c:k.c,a:k.a}]:[],280);
+  $('zoneName').textContent=k.z?k.z:'Responde las preguntas 3 y 4';
+  $('zoneTxt').textContent=k.z?ZTXT[k.z]:'El punto se mueve con tus respuestas.';
+  $('crit').innerHTML=CRIT.map(([key,t])=>`<li>${pill(k[key])}<span>${t}</span></li>`).join('');
+}
+function renderAreas(){
+  const box=$('areas');box.textContent='';
+  state.areas.forEach((a,i)=>{const c=document.createElement('span');c.className='chip';const t=document.createElement('span');t.textContent=a;const b=document.createElement('button');b.type='button';b.setAttribute('aria-label','Quitar '+a);b.textContent='×';b.onclick=()=>{state.areas.splice(i,1);renderAreas();renderSide()};c.append(t,b);box.appendChild(c)});
+}
+function addArea(){const v=$('areaIn').value.split(',').map(s=>s.trim()).filter(Boolean);v.forEach(x=>{if(!state.areas.some(y=>y.toLowerCase()===x.toLowerCase())&&state.areas.length<15)state.areas.push(x)});$('areaIn').value='';renderAreas();renderSide()}
+$('areaIn').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();addArea()}});
+$('areaIn').addEventListener('blur',()=>{if($('areaIn').value.trim())addArea()});
+$('f').addEventListener('change',renderSide);
+renderAreas();renderSide();
+
+// ---- envío a Google Sheets (Apps Script)
+const CONFIG={
+  // Pega aquí la URL de tu app web de Google Apps Script (termina en /exec).
+  // Si la dejas vacía, la página funciona en "modo de prueba" y no guarda nada.
+  API_URL:'https://script.google.com/macros/s/AKfycbzX-c2MQUh57I6UeA_AOgWn_GDDgF9HT_KS6x0vIDAla2TRbjcWRAz5NkkuXETM_mTV/exec'
+};
+function showMsg(t,err){const m=$('msg');m.textContent=t;m.className='msg'+(err?' err':'')}
+$('f').addEventListener('submit',async e=>{
+  e.preventDefault();
+  if($('areaIn').value.trim())addArea();
+  const nombre=$('nombre').value.trim(),problema=$('problema').value.trim();
+  const sc=scores('c'),sa=scores('a');
+  const missing=[];
+  if(!nombre)missing.push('el nombre');if(!problema)missing.push('el problema');
+  if(!state.areas.length)missing.push('las áreas');
+  if(!val('inversion')||!val('duracion'))missing.push('el alcance');
+  if(sc.includes(null)||sa.includes(null))missing.push('las 8 preguntas de la matriz');
+  if(missing.length){showMsg('Falta completar '+missing.join(', ')+'.',true);return}
+  const k=criteria();
+  const item={fecha:new Date().toISOString(),nombre,problema,localidad:$('localidad').value,sponsor:$('sponsor').value.trim(),
+    postulante:$('postulante').value.trim(),areas:state.areas.join('; '),numAreas:state.areas.length,
+    inversion:{no:'No',menor:'Algo menor',alta:'Importante'}[val('inversion')],duracion:{1:'Menos de 1 mes',3:'1 a 3 meses',6:'Más de 3 meses'}[val('duracion')],
+    claridad:Math.round(k.c*100)/100,alineacion:Math.round(k.a*100)/100,zona:k.z,
+    multiarea:k.multiarea?'Sí':'No',recursos:k.recursos?'Sí':'No',dias100:k.dias100?'Sí':'No',complejo:k.complejo?'Sí':'No',
+    criterios:[k.multiarea,k.recursos,k.dias100,k.complejo].filter(Boolean).length,
+    respuestasClaridad:sc.join(' '),respuestasAlineacion:sa.join(' ')};
+  $('send').disabled=true;showMsg('Enviando…');
+  try{
+    if(CONFIG.API_URL){
+      const res=await fetch(CONFIG.API_URL,{method:'POST',body:JSON.stringify(item)});
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      const out=await res.json();
+      if(!out||!out.ok)throw new Error('respuesta');
+    }
+    $('doneTitle').textContent=item.nombre;
+    $('doneTxt').textContent=(CONFIG.API_URL?'':'Modo de prueba: esta postulación no se guardó. ')+'Quedó en la zona '+item.zona.toLowerCase()+' y cumple '+item.criterios+' de 4 criterios. La revisaremos para armar la lista de 20 que se vota en el próximo comité.';
+    $('viewForm').hidden=true;$('viewDone').hidden=false;showMsg('');window.scrollTo(0,0);
+  }catch(err){
+    showMsg('No se pudo enviar. Revisa tu conexión e inténtalo de nuevo.',true);
+  }finally{$('send').disabled=false}
+});
+$('again').addEventListener('click',()=>{$('f').reset();state.areas=[];renderAreas();renderSide();$('viewDone').hidden=true;$('viewForm').hidden=false;window.scrollTo(0,0)});
+})();
+</script>
+
+</body>
+</html>
