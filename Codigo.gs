@@ -77,6 +77,23 @@ function resultados(clave) {
   return json({ ok: true, filas: filas, hora: new Date().toISOString() });
 }
 
+// Menú en la hoja: Postulaciones › Configurar clave de resultados
+function onOpen() {
+  SpreadsheetApp.getUi().createMenu('Postulaciones')
+    .addItem('Configurar clave de resultados', 'configurarClave')
+    .addToUi();
+}
+
+function configurarClave() {
+  const ui = SpreadsheetApp.getUi();
+  const r = ui.prompt('Clave de resultados', 'Escribe la clave para ver la página de resultados:', ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  const clave = r.getResponseText().trim();
+  if (!clave) { ui.alert('La clave no puede estar vacía.'); return; }
+  PropertiesService.getScriptProperties().setProperty('CLAVE_RESULTADOS', clave);
+  ui.alert('Listo. La clave quedó guardada.');
+}
+
 function doGet() {
   return json({ ok: true, mensaje: 'El formulario de postulación está conectado.' });
 }
