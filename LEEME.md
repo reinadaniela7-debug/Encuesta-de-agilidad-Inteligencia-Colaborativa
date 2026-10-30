@@ -5,7 +5,8 @@ Formulario para que los gerentes postulen proyectos para las células de intelig
 ## Archivos
 
 - `index.html`: el formulario (la página que se publica en GitHub Pages).
-- `Codigo.gs`: el script de Google que recibe las postulaciones y las guarda en la hoja.
+- `Codigo.gs`: el script de Google que recibe las postulaciones, las guarda en la hoja y se las entrega a la página de resultados.
+- `resultados.html`: tablero en vivo de las postulaciones, protegido con clave (se actualiza cada 30 segundos).
 
 ## Instalación (una sola vez, unos 10 minutos)
 
@@ -37,9 +38,21 @@ En el repositorio: **Settings › Pages › Deploy from a branch**, rama `main`,
 
 Ese es el enlace (y el QR) que se comparte con los gerentes.
 
+## Página de resultados
+
+La página `resultados.html` muestra todas las postulaciones en vivo: totales, matriz de Stacey, distribución por zona y criterios, y la tabla ordenada por criterios cumplidos. Pide una clave; sin ella, Google no entrega ningún dato.
+
+Para activarla (una sola vez):
+
+1. En Apps Script, reemplaza el código por la versión nueva de `Codigo.gs` y guarda.
+2. Ve a **Configuración del proyecto** (el engranaje) › **Propiedades de la secuencia de comandos** › **Agregar propiedad**. Nombre: `CLAVE_RESULTADOS`. Valor: la clave que quieras. Guarda.
+3. Ve a **Implementar › Administrar implementaciones**, pulsa el lápiz de la implementación actual, en **Versión** elige **Nueva versión** e **Implementar**. Así la URL no cambia.
+
+La clave nunca va en el código, porque este repositorio es público. Tras 10 intentos fallidos, la página se bloquea 10 minutos.
+
 ## Cómo se calcula la zona
 
-Cada eje es el promedio de 4 preguntas en escala de 1 a 5 (5 = más falta de claridad o de alineación). Se mide la distancia al origen de la matriz y se ubica en una banda: simple, complicado, complejo o caos. Es una guía para conversar, no una medición exacta.
+Las 8 preguntas se responden de 1 (No) a 5 (Sí). Cada respuesta se invierte para medir la falta de claridad o de alineación, y cada eje es el promedio de sus 4 preguntas. Se mide la distancia al origen de la matriz y se ubica en una banda: simple, complicado, complejo o caos. Es una guía para conversar, no una medición exacta.
 
 ## Nota
 

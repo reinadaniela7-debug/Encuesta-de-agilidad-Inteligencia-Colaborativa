@@ -30,6 +30,7 @@ const COLUMNAS = [
 function doPost(e) {
   try {
     const d = JSON.parse(e.postData.contents);
+    if (d.accion === 'resultados') return resultados(d.clave);
     const lock = LockService.getScriptLock();
     lock.waitLock(10000);
     try {
@@ -42,6 +43,38 @@ function doPost(e) {
   } catch (err) {
     return json({ ok: false, motivo: 'formato' });
   }
+}
+
+/**
+ * Entrega las postulaciones a la página de resultados, solo con la clave.
+ * La clave NO va en este código (el repositorio es público): se guarda en
+ * Configuración del proyecto › Propiedades de la secuencia de comandos,
+ * con el nombre CLAVE_RESULTADOS.
+ */
+function resultados(clave) {
+  const cache = CacheService.getScriptCache();
+  const intentos = Number(cache.get('intentos') || 0);
+  if (intentos >= 10) return json({ ok: false, motivo: 'bloqueado' });
+  const real = PropertiesService.getScriptProperties().getProperty('CLAVE_RESULTADOS');
+  if (!real) return json({ ok: false, motivo: 'sin_clave' });
+  if (String(clave || '') !== real) {
+    cache.put('intentos', String(intentos + 1), 600);
+    return json({ ok: false, motivo: 'clave' });
+  }
+  const hoja = obtenerHoja();
+  const valores = hoja.getDataRange().getValues();
+  const titulos = valores.shift() || [];
+  // Se busca cada columna por su título, por si alguien borró o movió columnas.
+  const porTitulo = {};
+  COLUMNAS.forEach(([campo, titulo]) => { porTitulo[titulo] = campo; });
+  const filas = valores
+    .filter(f => f.some(v => v !== ''))
+    .map(f => {
+      const o = {};
+      titulos.forEach((t, i) => { const k = porTitulo[t]; if (k) o[k] = f[i] instanceof Date ? f[i].toISOString() : f[i]; });
+      return o;
+    });
+  return json({ ok: true, filas: filas, hora: new Date().toISOString() });
 }
 
 function doGet() {

@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Postulaciones en vivo</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: header + key gate; then summary tiles, matrix and zone bars side by side, and the ranked table */
+:root{
+  --bg:#F6F7F9; --surface:#FFFFFF; --ink:#14213D; --muted:#5A6472; --line:#DDE2E9;
+  --navy:#0A1F5C; --blue:#0B4AA2; --sky:#BCD4EE; --mist:#E3E7ED; --orange:#E8912D;
+  --ok:#1E7A4C; --ok-bg:#E3F3EA; --warn:#9A5B00; --warn-bg:#FCEFD9;
+  --display:'IBM Plex Sans Condensed','Arial Narrow',Arial,sans-serif;
+  --body:'IBM Plex Sans',Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1424; --surface:#161E33; --ink:#E8EDF5; --muted:#A3AEBF; --line:#2A3550;
+  --navy:#9EC1E8; --blue:#7FB0EC; --sky:#2B4A7A; --mist:#222C44; --orange:#F2A541;
+  --ok:#7FD3A4; --ok-bg:#16382A; --warn:#F2C073; --warn-bg:#3A2C12; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+.wrap{max-width:1160px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+.eyebrow{font-family:var(--display);font-weight:600;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(30px,5vw,44px);line-height:1.05;margin:0;color:var(--navy)}
+h2{font-family:var(--display);font-size:20px;margin:0;color:var(--navy)}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.live{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px var(--ok-bg)}
+.dot.off{background:var(--muted);box-shadow:none}
+.btn{font:600 15px var(--body);border-radius:8px;padding:10px 16px;cursor:pointer;border:1px solid var(--navy);background:transparent;color:var(--navy)}
+.btn.primary{background:var(--navy);color:var(--surface)}
+.btn:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.gate{max-width:420px}
+.gate input{font:16px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%}
+.err{color:var(--warn);font-size:15px;margin:0}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+@media (max-width:760px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile b{display:block;font-family:var(--display);font-size:40px;line-height:1;color:var(--navy);font-variant-numeric:tabular-nums}
+.tile span{font-size:14px;color:var(--muted)}
+.two{display:grid;grid-template-columns:360px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
+.bars{display:flex;flex-direction:column;gap:12px}
+.bar{display:grid;grid-template-columns:110px minmax(0,1fr) 44px;gap:10px;align-items:center;font-size:15px}
+.track{height:14px;background:var(--mist);border-radius:7px;overflow:hidden}
+.fill{height:100%;border-radius:7px}
+.bar .n{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.ends{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.toolbar label{display:flex;gap:8px;align-items:center;font-size:15px}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:860px;font-size:14px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;white-space:nowrap}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.sub{color:var(--muted);margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.pill{font-size:12px;font-weight:600;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.no{background:var(--warn-bg);color:var(--warn)}
+.empty{padding:28px;color:var(--muted);text-align:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <div class="eyebrow">Agilidad EP · Células ágiles</div>
+      <h1>Postulaciones en vivo</h1>
+    </div>
+    <div class="live" id="live" hidden>
+      <span class="dot" id="dot"></span><span id="hora">Actualizando…</span>
+      <button class="btn" type="button" id="refresh">Actualizar</button>
+    </div>
+  </div>
+
+  <form class="card gate" id="gate" autocomplete="off">
+    <h2>Ingresa la clave de resultados</h2>
+    <input type="password" id="clave" aria-label="Clave de resultados" autocomplete="current-password">
+    <button class="btn primary" type="submit" id="entrar">Ver resultados</button>
+    <p class="err" id="gateErr" role="status"></p>
+  </form>
+
+  <section id="dash" hidden>
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div class="tiles">
+        <div class="card tile"><b id="tTotal">0</b><span>postulaciones</span></div>
+        <div class="card tile"><b id="tComplejo">0</b><span>en zona compleja</span></div>
+        <div class="card tile"><b id="tCuatro">0</b><span>cumplen los 4 criterios</span></div>
+        <div class="card tile"><b id="tMeta">0 / 20</b><span>hacia la lista para el comité</span></div>
+      </div>
+      <div class="two">
+        <div class="card"><h2>Matriz de Stacey</h2><div id="matrix"></div><p class="sub" style="margin:0;font-size:13px">Cada número corresponde a la tabla.</p></div>
+        <div class="card"><h2>Por zona</h2><div class="bars" id="zonas"></div>
+          <h2 style="margin-top:8px">Criterios cumplidos</h2><div class="bars" id="crits"></div></div>
+      </div>
+      <div class="toolbar">
+        <label for="soloCuatro"><input type="checkbox" id="soloCuatro"> Solo las que cumplen los 4 criterios</label>
+        <button class="btn" type="button" id="csv">Descargar CSV</button>
+      </div>
+      <div class="tablewrap"><table>
+        <thead><tr><th>#</th><th>Proyecto</th><th>Localidad y sponsor</th><th>Áreas</th><th>Zona</th><th>Criterios</th><th>Fecha</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+const CONFIG={
+  // La misma URL de Apps Script que usa el formulario (termina en /exec).
+  API_URL:'https://script.google.com/macros/s/AKfycbzX-c2MQUh57I6UeA_AOgWn_GDDgF9HT_KS6x0vIDAla2TRbjcWRAz5NkkuXETM_mTV/exec',
+  REFRESCO_SEG:30,
+  META:20
+};
+const $=id=>document.getElementById(id);
+const ss={get(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set(k,v){try{sessionStorage.setItem(k,v)}catch(e){}},del(k){try{sessionStorage.removeItem(k)}catch(e){}}};
+let clave=ss.get('clave-resultados')||'',filas=[],timer=null;
+
+async function cargar(){
+  const res=await fetch(CONFIG.API_URL,{method:'POST',body:JSON.stringify({accion:'resultados',clave})});
+  if(!res.ok)throw {m:'No se pudieron cargar los resultados.'};
+  const r=await res.json();
+  if(!r.ok){
+    const M={clave:'Clave incorrecta.',bloqueado:'Demasiados intentos. Espera 10 minutos e intenta de nuevo.',sin_clave:'Falta configurar la clave en Apps Script (ver LEEME.md).'};
+    throw {m:M[r.motivo]||'No se pudieron cargar los resultados.',auth:r.motivo==='clave'||r.motivo==='bloqueado'};
+  }
+  filas=(r.filas||[]).map((f,i)=>Object.assign({},f,{criterios:Number(f.criterios)||0,claridad:Number(f.claridad),alineacion:Number(f.alineacion)}));
+  $('hora').textContent='Actualizado a las '+new Date(r.hora||Date.now()).toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit'});
+  $('dot').classList.remove('off');
+  render();
+}
+async function refrescar(){
+  try{await cargar()}catch(e){
+    if(e.auth){salir(e.m);return}
+    $('dot').classList.add('off');$('hora').textContent='Sin conexión · reintentando';
+  }
+}
+function programar(){clearInterval(timer);timer=setInterval(()=>{if(document.visibilityState==='visible')refrescar()},CONFIG.REFRESCO_SEG*1000)}
+function salir(msg){clearInterval(timer);ss.del('clave-resultados');clave='';$('dash').hidden=true;$('live').hidden=true;$('gate').hidden=false;$('gateErr').textContent=msg||''}
+$('gate').addEventListener('submit',async e=>{
+  e.preventDefault();clave=$('clave').value.trim();if(!clave)return;
+  $('entrar').disabled=true;$('gateErr').textContent='Cargando…';
+  try{await cargar();ss.set('clave-resultados',clave);mostrar()}catch(err){$('gateErr').textContent=err.m||'No se pudieron cargar los resultados.'}
+  finally{$('entrar').disabled=false}
+});
+function mostrar(){$('gate').hidden=true;$('dash').hidden=false;$('live').hidden=false;$('gateErr').textContent='';programar()}
+$('refresh').onclick=refrescar;
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!$('dash').hidden)refrescar()});
+$('soloCuatro').onchange=render;
+
+const ZONAS=['Simple','Complicado','Complejo','Caos'];
+const ZCOL={Simple:'var(--sky)',Complicado:'var(--blue)',Complejo:'var(--navy)',Caos:'var(--muted)'};
+function matrixSVG(points){
+  const S=320,pad=8,o={x:pad,y:S-pad},W=S-2*pad,R=[0.3,0.5,0.85].map(k=>k*W);
+  const arc=r=>`M${o.x} ${o.y} L${o.x} ${o.y-r} A${r} ${r} 0 0 1 ${o.x+r} ${o.y} Z`;
+  let s=`<svg viewBox="0 0 ${S} ${S}" width="100%" role="img" aria-label="Matriz de Stacey con las postulaciones" style="max-width:${S}px;display:block">`;
+  s+=`<rect x="${o.x}" y="${pad}" width="${W}" height="${W}" fill="var(--mist)"/><path d="${arc(R[2])}" fill="var(--navy)" opacity=".9"/><path d="${arc(R[1])}" fill="var(--sky)"/><path d="${arc(R[0])}" fill="var(--surface)"/>`;
+  s+=`<text x="${o.x+6}" y="${o.y-8}" font-size="12" font-weight="600" fill="var(--ink)">Simple</text><text x="${o.x+R[0]*0.72+4}" y="${o.y-R[0]*0.72-4}" font-size="12" font-weight="600" fill="var(--ink)">Complicado</text><text x="${o.x+R[1]*0.78+10}" y="${o.y-R[1]*0.78-14}" font-size="14" font-weight="700" fill="var(--surface)">COMPLEJO</text><text x="${S-pad-6}" y="${pad+18}" font-size="13" font-weight="700" text-anchor="end" fill="var(--muted)">CAOS</text>`;
+  s+=`<path d="M${o.x} ${o.y} H${S-pad} M${o.x} ${o.y} V${pad}" stroke="var(--ink)" stroke-width="1.5" fill="none"/>`;
+  points.forEach(p=>{if(!isFinite(p.c)||!isFinite(p.a))return;const cx=o.x+(p.c-1)/4*W,cy=o.y-(p.a-1)/4*W;s+=`<circle cx="${cx}" cy="${cy}" r="10" fill="var(--orange)" stroke="var(--surface)" stroke-width="2"><title>${p.t}</title></circle><text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="10" font-weight="700" fill="#14213D">${p.n}</text>`});
+  return s+`</svg><div class="ends" style="margin-top:4px"><span>↑ Falta de alineación</span><span>Falta de claridad →</span></div>`;
+}
+function bars(el,items,max){
+  el.textContent='';
+  items.forEach(([label,n,color])=>{
+    const r=document.createElement('div');r.className='bar';
+    const l=document.createElement('span');l.textContent=label;
+    const t=document.createElement('div');t.className='track';const f=document.createElement('div');f.className='fill';f.style.width=(max?n/max*100:0)+'%';f.style.background=color;t.appendChild(f);
+    const c=document.createElement('span');c.className='n';c.textContent=n;
+    r.append(l,t,c);el.appendChild(r);
+  });
+}
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function ordenadas(){return filas.slice().sort((a,b)=>b.criterios-a.criterios||String(b.fecha).localeCompare(String(a.fecha)))}
+function render(){
+  const all=ordenadas();
+  all.forEach((f,i)=>f._n=i+1);
+  $('tTotal').textContent=all.length;
+  $('tComplejo').textContent=all.filter(f=>f.zona==='Complejo').length;
+  const cuatro=all.filter(f=>f.criterios===4).length;
+  $('tCuatro').textContent=cuatro;
+  $('tMeta').textContent=Math.min(cuatro,CONFIG.META)+' / '+CONFIG.META;
+  $('matrix').innerHTML=matrixSVG(all.map(f=>({c:f.claridad,a:f.alineacion,n:f._n,t:esc(f.nombre)})));
+  const zc=ZONAS.map(z=>[z,all.filter(f=>f.zona===z).length,ZCOL[z]]);
+  bars($('zonas'),zc,Math.max(1,...zc.map(x=>x[1])));
+  const cr=[['Multiárea','multiarea'],['Recursos acotados','recursos'],['100 días','dias100'],['Zona compleja','complejo']].map(([l,k])=>[l,all.filter(f=>f[k]==='Sí').length,'var(--ok)']);
+  bars($('crits'),cr,Math.max(1,all.length));
+  const lista=$('soloCuatro').checked?all.filter(f=>f.criterios===4):all;
+  const tb=$('rows');
+  if(!lista.length){tb.innerHTML=`<tr><td colspan="7" class="empty">${all.length?'Ninguna postulación cumple todavía los 4 criterios.':'Aún no hay postulaciones. Aparecerán aquí en cuanto alguien envíe el formulario.'}</td></tr>`;return}
+  tb.innerHTML=lista.map(f=>{
+    const chips=[['Multiárea','multiarea'],['Recursos','recursos'],['100 días','dias100'],['Compleja','complejo']].map(([l,k])=>`<span class="pill ${f[k]==='Sí'?'ok':'no'}">${f[k]==='Sí'?'✓':'✗'} ${l}</span>`).join('');
+    const fecha=f.fecha?new Date(f.fecha).toLocaleDateString('es-VE',{day:'numeric',month:'short'}):'';
+    return `<tr><td class="num">${f._n}</td>
+      <td><b>${esc(f.nombre)}</b><div class="sub">${esc(f.problema)}</div></td>
+      <td>${esc(f.localidad)}${f.sponsor?`<div class="sub">${esc(f.sponsor)}</div>`:''}</td>
+      <td>${esc(f.areas)}</td>
+      <td><b>${esc(f.zona)}</b><div class="sub num">Claridad ${esc(f.claridad)} · Alineación ${esc(f.alineacion)}</div></td>
+      <td><div class="chips">${chips}</div><div class="sub">${f.criterios} de 4</div></td>
+      <td class="num">${esc(fecha)}</td></tr>`;
+  }).join('');
+}
+$('csv').onclick=()=>{
+  const cols=[['#','_n'],['Proyecto','nombre'],['Problema','problema'],['Localidad','localidad'],['Sponsor','sponsor'],['Áreas','areas'],['Inversión','inversion'],['Duración','duracion'],['Falta de claridad','claridad'],['Falta de alineación','alineacion'],['Zona','zona'],['Multiárea','multiarea'],['Recursos acotados','recursos'],['100 días','dias100'],['Zona compleja','complejo'],['Criterios (de 4)','criterios'],['Fecha','fecha']];
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const txt='﻿'+[cols.map(c=>q(c[0])).join(',')].concat(ordenadas().map((f,i)=>cols.map(([,k])=>q(k==='_n'?i+1:f[k])).join(','))).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/csv'}));a.download='postulaciones-celulas.csv';document.body.appendChild(a);a.click();a.remove();
+};
+if(clave){$('gateErr').textContent='Cargando…';cargar().then(mostrar).catch(e=>salir(e.m))}
+})();
+</script>
+</body>
+</html>
