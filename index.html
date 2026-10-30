@@ -136,9 +136,6 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
               <input type="text" id="sponsor" maxlength="120" placeholder="Nombre y gerencia">
             </label>
           </div>
-          <label class="f" for="postulante">Tu nombre y gerencia
-            <input type="text" id="postulante" maxlength="120" placeholder="Quién postula">
-          </label>
           <label class="f" for="areaIn">Áreas involucradas <span class="opt">escribe un área y pulsa Enter</span>
             <input type="text" id="areaIn" maxlength="60" placeholder="Ej.: Compras, Finanzas, Planta, Tecnología">
           </label>
@@ -167,12 +164,12 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 
         <fieldset id="fsC">
           <legend>3 · Claridad del proceso</legend>
-          <p class="hint">1 = totalmente claro · 5 = no tenemos idea</p>
+          <p class="hint">1 = No · 5 = Sí</p>
         </fieldset>
 
         <fieldset id="fsA">
           <legend>4 · Alineación en los objetivos</legend>
-          <p class="hint">1 = todos queremos lo mismo · 5 = intereses opuestos</p>
+          <p class="hint">1 = No · 5 = Sí</p>
         </fieldset>
 
         <div class="actions">
@@ -209,10 +206,10 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 <script>
 (function(){
 const QC=["¿Sabemos qué pasos seguir para resolverlo?","¿Lo hemos hecho antes aquí o en otro lugar?","¿Podemos predecir el resultado y cuánto tardará?","¿Tenemos los datos y el conocimiento técnico necesarios?"];
-const QA=["¿Las áreas están de acuerdo en qué problema resolver?","¿Coinciden en qué sería un buen resultado?","¿Las prioridades o los KPI de cada área chocan entre sí?","¿Hay un sponsor que todas las áreas reconozcan?"];
-// For C questions a "yes" means clear (low score); the scale is always expressed as lack of clarity / alignment.
-const ENDS_C=[["Sí, claramente","No, ni idea"],["Sí, muchas veces","Nunca"],["Sí, con precisión","Imposible de predecir"],["Sí, todo","Nos falta casi todo"]];
-const ENDS_A=[["Sí, totalmente","Nada de acuerdo"],["Sí, totalmente","Visiones opuestas"],["No chocan","Chocan mucho"],["Sí, uno claro","No hay sponsor"]];
+const QA=["¿Las áreas están de acuerdo en qué problema resolver?","¿Coinciden en qué sería un buen resultado?","¿Las prioridades y los KPI de las áreas son compatibles?","¿Hay un sponsor que todas las áreas reconozcan?"];
+// Escala: 1 = No, 5 = Sí. Todas las preguntas están en positivo, así que se invierten (6 - v) para medir falta de claridad / alineación.
+const ENDS_C=[["No","Sí"],["No","Sí"],["No","Sí"],["No","Sí"]];
+const ENDS_A=[["No","Sí"],["No","Sí"],["No","Sí"],["No","Sí"]];
 const $=id=>document.getElementById(id);
 const state={areas:[],items:[]};
 
@@ -229,7 +226,8 @@ function buildQs(fs,qs,ends,prefix){
 buildQs($('fsC'),QC,ENDS_C,'c');buildQs($('fsA'),QA,ENDS_A,'a');
 
 function val(name){const el=document.querySelector('input[name="'+name+'"]:checked');return el?Number(el.value)||el.value:null}
-function scores(prefix){const out=[];for(let i=0;i<4;i++){out.push(val(prefix+i))}return out}
+function scores(prefix){const out=[];for(let i=0;i<4;i++){const v=val(prefix+i);out.push(v==null?null:6-v)}return out}
+function raw(prefix){const out=[];for(let i=0;i<4;i++){out.push(val(prefix+i))}return out}
 function avg(a){const v=a.filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null}
 function zoneOf(c,a){
   if(c==null||a==null)return null;
@@ -306,12 +304,12 @@ $('f').addEventListener('submit',async e=>{
   if(missing.length){showMsg('Falta completar '+missing.join(', ')+'.',true);return}
   const k=criteria();
   const item={fecha:new Date().toISOString(),nombre,problema,localidad:$('localidad').value,sponsor:$('sponsor').value.trim(),
-    postulante:$('postulante').value.trim(),areas:state.areas.join('; '),numAreas:state.areas.length,
+    areas:state.areas.join('; '),numAreas:state.areas.length,
     inversion:{no:'No',menor:'Algo menor',alta:'Importante'}[val('inversion')],duracion:{1:'Menos de 1 mes',3:'1 a 3 meses',6:'Más de 3 meses'}[val('duracion')],
     claridad:Math.round(k.c*100)/100,alineacion:Math.round(k.a*100)/100,zona:k.z,
     multiarea:k.multiarea?'Sí':'No',recursos:k.recursos?'Sí':'No',dias100:k.dias100?'Sí':'No',complejo:k.complejo?'Sí':'No',
     criterios:[k.multiarea,k.recursos,k.dias100,k.complejo].filter(Boolean).length,
-    respuestasClaridad:sc.join(' '),respuestasAlineacion:sa.join(' ')};
+    respuestasClaridad:raw('c').join(' '),respuestasAlineacion:raw('a').join(' ')};
   $('send').disabled=true;showMsg('Enviando…');
   try{
     if(CONFIG.API_URL){
