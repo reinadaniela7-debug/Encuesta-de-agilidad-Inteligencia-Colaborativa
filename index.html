@@ -68,10 +68,9 @@ input:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px soli
         <label class="f" for="interaccion"><span><span class="num">1</span>¿Qué interacción propones mejorar?</span>
           <textarea id="interaccion" maxlength="1500" placeholder="Ej.: la aprobación de compras menores de repuestos entre planta, compras y finanzas."></textarea>
         </label>
-        <label class="f" for="areaIn"><span><span class="num">2</span>¿Cuáles son las áreas involucradas? <span class="opt">escribe un área y pulsa Enter</span></span>
-          <input type="text" id="areaIn" maxlength="60" placeholder="Ej.: Compras, Finanzas, Planta">
+        <label class="f" for="areas"><span><span class="num">2</span>¿Cuáles son las áreas involucradas?</span>
+          <input type="text" id="areas" maxlength="300" placeholder="Ej.: Compras, Finanzas, Planta">
         </label>
-        <div class="chips" id="areas" aria-live="polite"></div>
         <label class="f" for="impacto"><span><span class="num">3</span>¿Por qué consideras que es de alto impacto?</span>
           <textarea id="impacto" maxlength="1500" placeholder="Qué se gana si mejora: tiempo, ventas, costos, experiencia del cliente…"></textarea>
         </label>
@@ -99,22 +98,12 @@ const CONFIG={
   API_URL:'https://script.google.com/macros/s/AKfycbzX-c2MQUh57I6UeA_AOgWn_GDDgF9HT_KS6x0vIDAla2TRbjcWRAz5NkkuXETM_mTV/exec'
 };
 const $=id=>document.getElementById(id);
-const state={areas:[]};
-
-function renderAreas(){
-  const box=$('areas');box.textContent='';
-  state.areas.forEach((a,i)=>{const c=document.createElement('span');c.className='chip';const t=document.createElement('span');t.textContent=a;const b=document.createElement('button');b.type='button';b.setAttribute('aria-label','Quitar '+a);b.textContent='×';b.onclick=()=>{state.areas.splice(i,1);renderAreas()};c.append(t,b);box.appendChild(c)});
-}
-function addArea(){const v=$('areaIn').value.split(',').map(s=>s.trim()).filter(Boolean);v.forEach(x=>{if(!state.areas.some(y=>y.toLowerCase()===x.toLowerCase())&&state.areas.length<15)state.areas.push(x)});$('areaIn').value='';renderAreas()}
-$('areaIn').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();addArea()}});
-$('areaIn').addEventListener('blur',()=>{if($('areaIn').value.trim())addArea()});
 
 function showMsg(t,err){const m=$('msg');m.textContent=t;m.className='msg'+(err?' err':'')}
 $('f').addEventListener('submit',async e=>{
   e.preventDefault();
-  if($('areaIn').value.trim())addArea();
   const item={fecha:new Date().toISOString(),postulante:$('postulante').value.trim(),interaccion:$('interaccion').value.trim(),
-    areas:state.areas.join('; '),numAreas:state.areas.length,impacto:$('impacto').value.trim()};
+    areas:$('areas').value.trim(),numAreas:$('areas').value.split(/[,;\n]| y /).map(x=>x.trim()).filter(Boolean).length,impacto:$('impacto').value.trim()};
   const missing=[];
   if(!item.postulante)missing.push('tu nombre');
   if(!item.interaccion)missing.push('la interacción');
@@ -135,7 +124,7 @@ $('f').addEventListener('submit',async e=>{
     showMsg('No se pudo enviar. Revisa tu conexión e inténtalo de nuevo.',true);
   }finally{$('send').disabled=false}
 });
-$('again').addEventListener('click',()=>{$('f').reset();state.areas=[];renderAreas();$('viewDone').hidden=true;$('viewForm').hidden=false;window.scrollTo(0,0)});
+$('again').addEventListener('click',()=>{$('f').reset();$('viewDone').hidden=true;$('viewForm').hidden=false;window.scrollTo(0,0)});
 })();
 </script>
 </body>
