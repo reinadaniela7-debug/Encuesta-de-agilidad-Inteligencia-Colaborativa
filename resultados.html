@@ -102,8 +102,8 @@ h2{font-family:var(--display);font-size:20px;margin:0;color:var(--navy)}
         <div class="card"><h2>Áreas más mencionadas</h2><p class="meta" style="margin:0">Toca un área para ver solo sus postulaciones.</p><div class="bars" id="areasBars"></div></div>
       </div>
       <div class="section-title">
-        <div><h2>Propuestas para votar</h2><p class="meta" style="margin:4px 0 0">Agrupamos automáticamente las postulaciones que se parecen. Puedes editar el nombre de cada propuesta antes de descargar.</p></div>
-        <button class="btn primary" type="button" id="pdf">Descargar presentación (PDF)</button>
+        <div><h2>Propuestas para votar</h2><p class="meta" style="margin:4px 0 0">Agrupamos automáticamente las postulaciones que se parecen. Puedes editar el nombre de cada propuesta antes de descargar el resumen para los directores.</p></div>
+        <button class="btn primary" type="button" id="pdf">Descargar resumen de una página (PDF)</button>
       </div>
       <div class="props" id="props"></div>
       <h2 style="margin-top:8px">Todas las postulaciones</h2>
@@ -231,61 +231,60 @@ function renderPropuestas(){
 const lat=t=>String(t||'').replace(/[“”«»]/g,'"').replace(/[‘’]/g,"'").replace(/[—–]/g,'-').replace(/…/g,'...').replace(/·/g,'-').replace(/→/g,'->').replace(/[^\x20-\x7E\xA0-\xFF\n]/g,'');
 $('pdf').onclick=()=>{
   if(!window.jspdf){alert('No se pudo cargar el generador de PDF. Revisa tu conexión.');return}
-  const {jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'landscape',unit:'pt',format:[960,540]});
-  const NAVY=[10,31,92],BLUE=[11,74,162],INK=[27,36,51],GREY=[90,100,114],MIST=[227,231,237],BG=[251,251,250];
-  const M=64,W=960-2*M;
-  const fondo=()=>{doc.setFillColor(...BG);doc.rect(0,0,960,540,'F')};
-  const pie=(n)=>{doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...GREY);doc.text(lat('Agilidad EP - Propuestas de células ágiles'),M,520);doc.text(String(n),960-M,520,{align:'right'})};
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'letter'});
+  const PW=612,PH=792,M=40,W=PW-2*M;
+  const NAVY=[10,31,92],BLUE=[11,74,162],INK=[27,36,51],GREY=[90,100,114],MIST=[227,231,237],ROW=[242,244,247];
   const fecha=new Date().toLocaleDateString('es-VE',{day:'numeric',month:'long',year:'numeric'});
-  // Portada
-  fondo();doc.setFillColor(...NAVY);doc.rect(0,0,960,540,'F');
-  doc.setTextColor(158,193,232);doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text(lat('AGILIDAD EP - INTELIGENCIA COLABORATIVA'),M,150);
-  doc.setTextColor(255,255,255);doc.setFontSize(40);doc.text(lat('Propuestas de células ágiles'),M,205);
-  doc.setFont('helvetica','normal');doc.setFontSize(18);doc.setTextColor(217,230,245);
-  doc.text(lat(`${filas.length} postulaciones agrupadas en ${grupos.length} propuestas para votar`),M,250);
-  doc.setFontSize(13);doc.text(lat(fecha),M,280);
-  // Resumen para votar
-  doc.addPage();fondo();
-  doc.setTextColor(...NAVY);doc.setFont('helvetica','bold');doc.setFontSize(26);doc.text(lat('Propuestas para votar'),M,80);
-  doc.setFont('helvetica','normal');doc.setFontSize(12);doc.setTextColor(...GREY);doc.text(lat('Marca tu voto en la columna de la derecha. Cada propuesta tiene su detalle en las páginas siguientes.'),M,104);
-  let y=140;const rowH=Math.min(48,(470-y)/Math.max(1,Math.min(grupos.length,8)));
-  grupos.slice(0,8).forEach((g,i)=>{
-    doc.setFillColor(...(i%2?BG:[238,241,245]));doc.rect(M,y-18,W,rowH,'F');
-    doc.setFillColor(...NAVY);doc.circle(M+18,y+rowH/2-18,11,'F');doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(String(i+1),M+18,y+rowH/2-14,{align:'center'});
-    doc.setTextColor(...INK);doc.setFontSize(13);doc.text(lat(recorta(nombres[g.id],78)),M+42,y+rowH/2-20);
-    doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(...GREY);
-    doc.text(lat(`${g.items.length} ${g.items.length>1?'postulaciones':'postulación'} - ${recorta(g.areas.join(', '),90)}`),M+42,y+rowH/2-5);
-    doc.setDrawColor(...GREY);doc.rect(960-M-90,y+rowH/2-30,80,24);
-    y+=rowH;
-  });
-  if(grupos.length>8){doc.setFontSize(10);doc.setTextColor(...GREY);doc.text(lat(`+ ${grupos.length-8} propuestas más en las páginas siguientes`),M,y+10)}
-  doc.setFontSize(10);doc.setTextColor(...GREY);doc.text('Votos',960-M-50,128,{align:'center'});
-  pie(2);
-  // Una página por propuesta
-  grupos.forEach((g,i)=>{
-    doc.addPage();fondo();
-    doc.setFillColor(...NAVY);doc.circle(M+20,72,20,'F');doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text(String(i+1),M+20,78,{align:'center'});
-    doc.setTextColor(...NAVY);doc.setFontSize(24);
-    const tl=doc.splitTextToSize(lat(nombres[g.id]),W-60);doc.text(tl.slice(0,2),M+54,70);
-    let yy=70+Math.min(2,tl.length)*28+10;
-    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(...BLUE);doc.text('PROPUESTA',M,yy);
-    doc.setFont('helvetica','normal');doc.setFontSize(13);doc.setTextColor(...INK);
-    const pl=doc.splitTextToSize(lat(propuestaTexto(g)),W);doc.text(pl.slice(0,4),M,yy+20);yy+=20+Math.min(4,pl.length)*17+14;
-    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(...BLUE);doc.text(lat('ÁREAS INVOLUCRADAS'),M,yy);
-    doc.setFont('helvetica','normal');doc.setFontSize(12);doc.setTextColor(...INK);
-    const al=doc.splitTextToSize(lat(g.areas.join(' - ')||'-'),W);doc.text(al.slice(0,2),M,yy+18);yy+=18+Math.min(2,al.length)*15+14;
-    const colW=(W-30)/2,yTop=yy;
-    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(...BLUE);doc.text(lat(`INTERACCIONES QUE INCLUYE (${g.items.length})`),M,yTop);
-    doc.text(lat('POR QUÉ ES DE ALTO IMPACTO'),M+colW+30,yTop);
-    doc.setFont('helvetica','normal');doc.setFontSize(11);doc.setTextColor(...INK);
-    let y1=yTop+18;g.items.slice(0,5).forEach(f=>{const t=doc.splitTextToSize(lat('- '+recorta(f.interaccion,170)),colW);const tt=t.slice(0,3);if(y1+tt.length*14>480)return;doc.text(tt,M,y1);y1+=tt.length*14+6});
-    if(g.items.length>5&&y1<470){doc.setTextColor(...GREY);doc.text(lat(`y ${g.items.length-5} más`),M,y1)}
-    doc.setTextColor(...INK);
-    let y2=yTop+18;g.items.filter(f=>f.impacto).slice(0,4).forEach(f=>{const t=doc.splitTextToSize(lat('"'+recorta(f.impacto,170)+'"'),colW);const tt=t.slice(0,3);if(y2+tt.length*14>480)return;doc.setFont('helvetica','italic');doc.text(tt,M+colW+30,y2);y2+=tt.length*14+6});
-    doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(...NAVY);doc.text('Votos:',960-M-150,500);doc.setDrawColor(...GREY);doc.rect(960-M-95,484,95,24);
-    pie(i+3);
-  });
-  doc.save('propuestas-celulas-agiles.pdf');
+  const txt=(t,x,y,o={})=>{doc.setFont('helvetica',o.b?'bold':(o.i?'italic':'normal'));doc.setFontSize(o.s||10);doc.setTextColor(...(o.c||INK));doc.text(t,x,y,o.a?{align:o.a}:undefined)};
+  const wrap=(t,w,s,b)=>{doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(s);return doc.splitTextToSize(lat(t),w)};
+  // Encabezado
+  doc.setFillColor(...NAVY);doc.rect(0,0,PW,108,'F');
+  txt(lat('AGILIDAD EP - INTELIGENCIA COLABORATIVA'),M,34,{b:1,s:9,c:[158,193,232]});
+  txt(lat('¿Qué interacciones entre áreas debemos mejorar primero?'),M,62,{b:1,s:19,c:[255,255,255]});
+  txt(lat(`Resumen de las postulaciones recibidas - ${fecha}`),M,86,{s:10.5,c:[217,230,245]});
+  // Indicadores
+  const areas=conteoAreas();
+  const kpis=[[filas.length,'postulaciones'],[grupos.length,'propuestas agrupadas'],[areas.length,'áreas mencionadas']];
+  let y=132;const kw=(W-2*12)/3;
+  kpis.forEach(([n,l],i)=>{const x=M+i*(kw+12);doc.setFillColor(...ROW);doc.roundedRect(x,y,kw,52,6,6,'F');txt(String(n),x+14,y+33,{b:1,s:24,c:NAVY});doc.setFont('helvetica','bold');doc.setFontSize(24);const nw=doc.getTextWidth(String(n));txt(lat(l),x+22+nw,y+31,{s:10,c:GREY})});
+  y+=76;
+  // Áreas más mencionadas
+  txt(lat('ÁREAS MÁS MENCIONADAS'),M,y,{b:1,s:9.5,c:BLUE});y+=12;
+  const top=areas.slice(0,6),max=Math.max(1,...top.map(a=>a.n));
+  const colW=(W-24)/2;
+  top.forEach((a,i)=>{const col=i<3?0:1,row=i%3;const x=M+col*(colW+24),yy=y+row*18;
+    txt(lat(recorta(a.label,24)),x,yy+9,{s:9.5});
+    const bx=x+120,bw=colW-120-24;doc.setFillColor(...MIST);doc.roundedRect(bx,yy+2,bw,8,4,4,'F');doc.setFillColor(...BLUE);doc.roundedRect(bx,yy+2,Math.max(8,bw*a.n/max),8,4,4,'F');
+    txt(String(a.n),x+colW,yy+9,{b:1,s:9.5,a:'right'})});
+  y+=Math.min(3,Math.max(1,top.length))*18+20;
+  // Propuestas priorizadas
+  txt(lat('PROPUESTAS PRIORIZADAS POR NÚMERO DE POSTULACIONES'),M,y,{b:1,s:9.5,c:BLUE});y+=10;
+  const bottomLimit=PH-118;let shown=0;
+  for(let i=0;i<grupos.length;i++){
+    const g=grupos[i];
+    const title=wrap(nombres[g.id]||g.rep.interaccion,W-120,11,true).slice(0,2);
+    const meta=wrap(`${g.items.length} ${g.items.length>1?'postulaciones':'postulación'} - Áreas: ${g.areas.join(', ')}`,W-120,9,false).slice(0,2);
+    const imp=g.items.map(f=>f.impacto).filter(Boolean)[0];
+    const quote=imp?wrap('"'+recorta(imp,220)+'"',W-120,9,false).slice(0,2):[];
+    const h=14+title.length*13+meta.length*11+quote.length*11+8;
+    if(y+h>bottomLimit)break;
+    doc.setFillColor(...(i%2?[255,255,255]:ROW));doc.rect(M,y,W,h,'F');
+    doc.setFillColor(...NAVY);doc.circle(M+18,y+18,10,'F');txt(String(i+1),M+18,y+21.5,{b:1,s:10,c:[255,255,255],a:'center'});
+    let ty=y+18;doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(...INK);doc.text(title,M+40,ty);ty+=title.length*13;
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...GREY);doc.text(meta,M+40,ty);ty+=meta.length*11;
+    if(quote.length){doc.setFont('helvetica','italic');doc.setTextColor(...INK);doc.text(quote,M+40,ty)}
+    doc.setDrawColor(...GREY);doc.setLineWidth(0.8);doc.rect(PW-M-54,y+8,44,20);
+    y+=h+4;shown++;
+  }
+  if(shown<grupos.length)txt(lat(`+ ${grupos.length-shown} propuestas más, con 1 postulación cada una o menos votadas. Detalle completo en la página de resultados.`),M,y+8,{s:8.5,c:GREY});
+  // Decisión
+  const dy=PH-100;
+  doc.setFillColor(...NAVY);doc.roundedRect(M,dy,W,64,6,6,'F');
+  txt(lat('DECISIÓN DEL COMITÉ'),M+16,dy+22,{b:1,s:9.5,c:[158,193,232]});
+  txt(lat('Marca 1 o 2 propuestas para la primera ola de células ágiles (100 días).'),M+16,dy+40,{s:10.5,c:[255,255,255]});
+  txt(lat('Criterios: 3 áreas o más - recursos acotados - se resuelve en 100 días - objetivo claro, el cómo por descubrir.'),M+16,dy+55,{s:8.5,c:[217,230,245]});
+  txt(lat('Agilidad EP - Fuente: formulario de postulación de interacciones'),M,PH-20,{s:8,c:GREY});
+  doc.save('resumen-postulaciones-celulas.pdf');
 };
 
 let firma='';
