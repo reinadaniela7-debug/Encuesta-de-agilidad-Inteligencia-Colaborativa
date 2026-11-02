@@ -1,6 +1,6 @@
-# Postula tu proyecto · Células ágiles
+# Postula una interacción · Células ágiles
 
-Formulario para que los gerentes postulen proyectos para las células de inteligencia colaborativa. Cada postulación se ubica sola en la matriz de Stacey, muestra qué criterios cumple y se guarda como una fila en Google Sheets.
+Formulario para que las personas propongan interacciones entre áreas que conviene mejorar. Pide cuatro datos: nombre, la interacción a mejorar, las áreas involucradas y por qué es de alto impacto. Cada respuesta se guarda como una fila en la pestaña "Sugerencias" de Google Sheets.
 
 ## Archivos
 
@@ -40,7 +40,7 @@ Ese es el enlace (y el QR) que se comparte con los gerentes.
 
 ## Página de resultados
 
-La página `resultados.html` muestra todas las postulaciones en vivo: totales, matriz de Stacey, distribución por zona y criterios, y la tabla ordenada por criterios cumplidos. Pide una clave; sin ella, Google no entrega ningún dato.
+La página `resultados.html` muestra todas las postulaciones en vivo: total, áreas más mencionadas (con filtro por área) y la lista completa, con descarga en CSV. Pide una clave; sin ella, Google no entrega ningún dato.
 
 Para activarla (una sola vez):
 
@@ -49,10 +49,6 @@ Para activarla (una sola vez):
 3. Ve a **Implementar › Administrar implementaciones**, pulsa el lápiz de la implementación actual, en **Versión** elige **Nueva versión** e **Implementar**. Así la URL no cambia.
 
 La clave nunca va en el código, porque este repositorio es público. Tras 10 intentos fallidos, la página se bloquea 10 minutos.
-
-## Cómo se calcula la zona
-
-Las 8 preguntas se responden de 1 (No) a 5 (Sí). Cada respuesta se invierte para medir la falta de claridad o de alineación, y cada eje es el promedio de sus 4 preguntas. Se mide la distancia al origen de la matriz y se ubica en una banda: simple, complicado, complejo o caos. Es una guía para conversar, no una medición exacta.
 
 ## Nota
 

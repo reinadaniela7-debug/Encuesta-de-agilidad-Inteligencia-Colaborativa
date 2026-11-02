@@ -1,30 +1,16 @@
 /**
  * Recibe las postulaciones del formulario y las guarda como filas
- * en la hoja "Postulaciones" de esta Google Sheet.
+ * en la hoja "Sugerencias" de esta Google Sheet (la crea sola la primera vez).
  * Instrucciones de instalación: ver LEEME.md
  */
-const HOJA = 'Postulaciones';
+const HOJA = 'Sugerencias';
 const COLUMNAS = [
   ['fecha', 'Fecha'],
-  ['nombre', 'Proyecto'],
-  ['problema', 'Problema que resuelve'],
   ['postulante', 'Postulado por'],
-  ['sponsor', 'Sponsor'],
-  ['localidad', 'Localidad'],
+  ['interaccion', 'Interacción a mejorar'],
   ['areas', 'Áreas involucradas'],
   ['numAreas', 'N.º de áreas'],
-  ['inversion', 'Inversión adicional'],
-  ['duracion', 'Duración estimada'],
-  ['claridad', 'Falta de claridad (1-5)'],
-  ['alineacion', 'Falta de alineación (1-5)'],
-  ['zona', 'Zona de Stacey'],
-  ['multiarea', 'Multiárea'],
-  ['recursos', 'Recursos acotados'],
-  ['dias100', '100 días'],
-  ['complejo', 'Zona compleja'],
-  ['criterios', 'Criterios que cumple (de 4)'],
-  ['respuestasClaridad', 'Respuestas claridad'],
-  ['respuestasAlineacion', 'Respuestas alineación']
+  ['impacto', 'Por qué es de alto impacto']
 ];
 
 function doPost(e) {
