@@ -125,17 +125,9 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
           <label class="f" for="problema">¿Qué problema resuelve hoy?
             <textarea id="problema" maxlength="1200" placeholder="Describe la situación actual, a quién afecta y qué se gana si se resuelve."></textarea>
           </label>
-          <div class="row2">
-            <label class="f" for="localidad">Localidad
-              <select id="localidad">
-                <option value="">Selecciona…</option>
-                <option>CEP</option><option>Planta</option><option>Centro logístico</option><option>Oficina de ventas</option><option>Varias localidades</option>
-              </select>
-            </label>
-            <label class="f" for="sponsor">Gerente o sponsor <span class="opt">quién lo impulsaría</span>
-              <input type="text" id="sponsor" maxlength="120" placeholder="Nombre y gerencia">
-            </label>
-          </div>
+          <label class="f" for="sponsor">Gerente o sponsor <span class="opt">quién lo impulsaría</span>
+            <input type="text" id="sponsor" maxlength="120" placeholder="Nombre y gerencia">
+          </label>
           <label class="f" for="areaIn">Áreas involucradas <span class="opt">escribe un área y pulsa Enter</span>
             <input type="text" id="areaIn" maxlength="60" placeholder="Ej.: Compras, Finanzas, Planta, Tecnología">
           </label>
@@ -303,7 +295,7 @@ $('f').addEventListener('submit',async e=>{
   if(sc.includes(null)||sa.includes(null))missing.push('las 8 preguntas de la matriz');
   if(missing.length){showMsg('Falta completar '+missing.join(', ')+'.',true);return}
   const k=criteria();
-  const item={fecha:new Date().toISOString(),nombre,problema,localidad:$('localidad').value,sponsor:$('sponsor').value.trim(),
+  const item={fecha:new Date().toISOString(),nombre,problema,sponsor:$('sponsor').value.trim(),
     areas:state.areas.join('; '),numAreas:state.areas.length,
     inversion:{no:'No',menor:'Algo menor',alta:'Importante'}[val('inversion')],duracion:{1:'Menos de 1 mes',3:'1 a 3 meses',6:'Más de 3 meses'}[val('duracion')],
     claridad:Math.round(k.c*100)/100,alineacion:Math.round(k.a*100)/100,zona:k.z,
