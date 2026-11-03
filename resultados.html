@@ -68,6 +68,14 @@ h2{font-family:var(--display);font-size:20px;margin:0;color:var(--navy)}
 .prop input{font:600 17px var(--body);color:var(--ink);background:transparent;border:1px dashed transparent;border-radius:6px;padding:4px 6px;width:100%}
 .prop input:hover{border-color:var(--line)}
 .prop ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.prop h3{margin:0;font-size:18px;line-height:1.3;flex:1}
+.votos{flex:none;font-family:var(--display);font-weight:700;font-size:15px;color:var(--navy);background:var(--mist);border-radius:999px;padding:4px 12px;white-space:nowrap}
+.cx{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.cx button{font:600 14px var(--body);border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;padding:6px 14px;cursor:pointer}
+.cx button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:var(--surface)}
+.cxbar{display:flex;gap:3px;width:120px}
+.cxbar span{flex:1;height:10px;border-radius:3px;background:var(--mist)}
+.cxbar span.on{background:var(--blue)}
 .section-title{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -102,8 +110,8 @@ h2{font-family:var(--display);font-size:20px;margin:0;color:var(--navy)}
         <div class="card"><h2>Áreas más mencionadas</h2><p class="meta" style="margin:0">Toca un área para ver solo sus postulaciones.</p><div class="bars" id="areasBars"></div></div>
       </div>
       <div class="section-title">
-        <div><h2>Propuestas para votar</h2><p class="meta" style="margin:4px 0 0">Agrupamos automáticamente las postulaciones que se parecen. Puedes editar el nombre de cada propuesta antes de descargar el resumen para los directores.</p></div>
-        <button class="btn primary" type="button" id="pdf">Descargar resumen de una página (PDF)</button>
+        <div><h2>Desglose agrupado</h2><p class="meta" style="margin:4px 0 0">Las postulaciones agrupadas en propuestas, con sus votos y quiénes votaron. Marca la complejidad de cada una y descarga el resumen en Word para compartirlo con los directores.</p></div>
+        <button class="btn primary" type="button" id="word">Descargar resumen (Word editable)</button>
       </div>
       <div class="props" id="props"></div>
       <h2 style="margin-top:8px">Todas las postulaciones</h2>
@@ -116,7 +124,7 @@ h2{font-family:var(--display);font-size:20px;margin:0;color:var(--navy)}
   </section>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
 <script>
 (function(){
 const CONFIG={
@@ -207,84 +215,122 @@ function propuestaTexto(g){
   const ar=g.areas.slice(0,5);const lista=ar.length>1?ar.slice(0,-1).join(', ')+' y '+ar[ar.length-1]:(ar[0]||'varias áreas');
   return `Formar una célula ágil con ${lista} para mejorar esta interacción: ${minus(recorta(g.rep.interaccion,160).replace(/[.]$/,''))}. `+(g.items.length>1?`Lo proponen ${g.items.length} personas.`:'Lo propone 1 persona.');
 }
+// ---------- Grupos definidos ----------
+// Cada postulación vota en el primer grupo cuya regla coincide (orden: de arriba hacia abajo en ORDEN_VOTO).
+// "relacionadas" muestra temas que se mencionan en el grupo sin sumar voto.
+const GRUPOS=[
+  {id:'mercadeo', nombre:'Mercadeo y marcas entre regiones',
+   desc:'Alinear cómo trabajan los equipos de mercadeo de las distintas regiones y operaciones, en Venezuela y a nivel internacional, en el manejo de las marcas de Empresas Polar, con un balance entre estandarización y adaptación local.',
+   voto:/marca|mercadeo|marketing|regiones/i, relacionadas:null},
+  {id:'compras', nombre:'Proceso de compras de punta a punta',
+   desc:'Revisar en lo macro todo el proceso de compras: el registro de proveedores y contratistas, el onboarding en Ariba y la aprobación digital del ciclo de procura a pago, incluida la colaboración internacional/Venezuela en compras.',
+   voto:/ariba|proveedor|contratista|procura|aprobaci[oó]n digital/i, relacionadas:/internacional[\s\S]*compra|compra[\s\S]*internacional/i},
+  {id:'categorias', nombre:'Gestión de selección de categorías a comprar',
+   desc:'Acordar entre las direcciones de los tres negocios qué categorías se compran, para llegar a una selección de portafolio común.',
+   voto:/categor/i, relacionadas:null},
+];
+const ORDEN_VOTO=['categorias','compras','mercadeo'];
+const CX=['Baja','Media','Alta'];
+let complejidad={};
+const persona=n=>key(String(n||''));
+function construirGrupos(){
+  const out=GRUPOS.map(g=>({...g,items:[],votantes:[],extra:[]}));
+  const byId=Object.fromEntries(out.map(g=>[g.id,g]));
+  const otras=[];
+  filas.forEach(f=>{
+    const t=String(f.interaccion||'');
+    const gid=ORDEN_VOTO.find(id=>byId[id].voto.test(t));
+    if(!gid){otras.push(f);return}
+    const g=byId[gid];g.items.push(f);
+    if(f.postulante&&!g.votantes.some(v=>persona(v)===persona(f.postulante)))g.votantes.push(f.postulante.trim());
+    out.forEach(o=>{if(o.id!==gid&&o.relacionadas&&o.relacionadas.test(t))o.extra.push(f)});
+  });
+  return {grupos:out.sort((a,b)=>b.votantes.length-a.votantes.length),otras};
+}
+function barra(n){const d=document.createElement('div');d.className='cxbar';for(let i=0;i<3;i++){const s=document.createElement('span');if(i<n)s.className='on';d.appendChild(s)}return d}
 function renderPropuestas(){
-  grupos=agrupar(0.22);
+  const {grupos:gs,otras}=construirGrupos();grupos=gs;
   const box=$('props');box.textContent='';
-  if(!grupos.length){const d=document.createElement('div');d.className='card empty';d.textContent='Las propuestas aparecerán cuando lleguen postulaciones.';box.appendChild(d);return}
-  grupos.forEach((g,i)=>{
-    const id=g.items.map(f=>f.fecha).sort().join('|');g.id=id;
-    if(!nombres[id])nombres[id]=recorta(g.rep.interaccion,90);
+  if(!filas.length){const d=document.createElement('div');d.className='card empty';d.textContent='Las propuestas aparecerán cuando lleguen postulaciones.';box.appendChild(d);return}
+  gs.forEach((g,i)=>{
     const c=document.createElement('article');c.className='card prop';
     const h=document.createElement('div');h.className='prop-head';
     const b=document.createElement('div');b.className='badge';b.textContent=i+1;
-    const inp=document.createElement('input');inp.type='text';inp.value=nombres[id];inp.setAttribute('aria-label','Nombre de la propuesta '+(i+1));inp.oninput=()=>{nombres[id]=inp.value};
-    h.append(b,inp);
-    const p=document.createElement('p');p.textContent=propuestaTexto(g);
-    const ch=document.createElement('div');ch.className='chips';g.areas.forEach(a=>{const s=document.createElement('span');s.className='chip';s.textContent=a;ch.appendChild(s)});
-    const lb=document.createElement('div');lb.className='lbl';lb.textContent=g.items.length>1?`Incluye ${g.items.length} postulaciones`:'Incluye 1 postulación';
-    const ul=document.createElement('ul');g.items.forEach(f=>{const li=document.createElement('li');li.textContent=recorta(f.interaccion,140)+(f.postulante?' — '+f.postulante:'');ul.appendChild(li)});
-    c.append(h,p,ch,lb,ul);box.appendChild(c);
+    const t=document.createElement('h3');t.textContent=g.nombre;
+    const v=document.createElement('span');v.className='votos';v.textContent=g.votantes.length+(g.votantes.length===1?' voto':' votos');
+    h.append(b,t,v);
+    const p=document.createElement('p');p.textContent=g.desc;
+    const lb=document.createElement('div');lb.className='lbl';lb.textContent='Incluye';
+    const ul=document.createElement('ul');
+    const vistos=new Set();
+    g.items.forEach(f=>{const k=persona(f.postulante)+'|'+key(f.interaccion);if(vistos.has(k))return;vistos.add(k);const li=document.createElement('li');li.textContent=recorta(f.interaccion,160);ul.appendChild(li)});
+    g.extra.forEach(f=>{const li=document.createElement('li');li.textContent=recorta(f.interaccion,160)+' (relacionado, su voto cuenta en otro grupo)';ul.appendChild(li)});
+    const vt=document.createElement('p');vt.className='meta';vt.textContent='Votaron: '+(g.votantes.join(', ')||'nadie todavía');
+    const cx=document.createElement('div');cx.className='cx';
+    const cl=document.createElement('span');cl.className='lbl';cl.textContent='Complejidad';cx.appendChild(cl);
+    const nivel=CX.indexOf(complejidad[g.id])+1;cx.appendChild(barra(nivel));
+    CX.forEach(nv=>{const bt=document.createElement('button');bt.type='button';bt.textContent=nv;bt.setAttribute('aria-pressed',String(complejidad[g.id]===nv));bt.onclick=()=>{complejidad[g.id]=complejidad[g.id]===nv?undefined:nv;renderPropuestas()};cx.appendChild(bt)});
+    c.append(h,p,lb,ul,vt,cx);box.appendChild(c);
   });
+  if(otras.length){
+    const c=document.createElement('article');c.className='card';
+    const t=document.createElement('h3');t.style.margin='0';t.textContent='Otras postulaciones (sin grupo todavía)';
+    const ul=document.createElement('ul');otras.forEach(f=>{const li=document.createElement('li');li.textContent=recorta(f.interaccion,160)+(f.postulante?' — '+f.postulante:'');ul.appendChild(li)});
+    c.append(t,ul);box.appendChild(c);
+  }
 }
 
-// ---------- PDF ----------
-const lat=t=>String(t||'').replace(/[“”«»]/g,'"').replace(/[‘’]/g,"'").replace(/[—–]/g,'-').replace(/…/g,'...').replace(/·/g,'-').replace(/→/g,'->').replace(/[^\x20-\x7E\xA0-\xFF\n]/g,'');
-$('pdf').onclick=()=>{
-  if(!window.jspdf){alert('No se pudo cargar el generador de PDF. Revisa tu conexión.');return}
-  const {jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'letter'});
-  const PW=612,PH=792,M=40,W=PW-2*M;
-  const NAVY=[10,31,92],BLUE=[11,74,162],INK=[27,36,51],GREY=[90,100,114],MIST=[227,231,237],ROW=[242,244,247];
+// ---------- Word ----------
+$('word').onclick=async()=>{
+  if(!window.docx){alert('No se pudo cargar el generador de Word. Revisa tu conexión.');return}
+  const D=window.docx;
+  const {grupos:gs,otras}=construirGrupos();
+  const NAVY='0A1F5C',BLUE='0B4AA2',GREY='5A6472',MIST='E3E7ED';
+  const F='Arial';
+  const run=(text,o={})=>new D.TextRun({text:String(text??''),font:F,size:(o.s||10)*2,bold:!!o.b,italics:!!o.i,color:o.c||'1B2433'});
+  const par=(children,o={})=>new D.Paragraph({children:Array.isArray(children)?children:[children],spacing:{after:o.after??120,before:o.before??0},heading:o.h,bullet:o.bullet?{level:0}:undefined});
+  const cell=(text,o={})=>new D.TableCell({children:[par(run(text,{s:o.s||9,b:o.b,c:o.c}),{after:40})],shading:o.fill?{type:D.ShadingType.CLEAR,color:'auto',fill:o.fill}:undefined,width:o.w?{size:o.w,type:D.WidthType.DXA}:undefined,margins:{top:60,bottom:60,left:90,right:90}});
   const fecha=new Date().toLocaleDateString('es-VE',{day:'numeric',month:'long',year:'numeric'});
-  const txt=(t,x,y,o={})=>{doc.setFont('helvetica',o.b?'bold':(o.i?'italic':'normal'));doc.setFontSize(o.s||10);doc.setTextColor(...(o.c||INK));doc.text(t,x,y,o.a?{align:o.a}:undefined)};
-  const wrap=(t,w,s,b)=>{doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(s);return doc.splitTextToSize(lat(t),w)};
-  // Encabezado
-  doc.setFillColor(...NAVY);doc.rect(0,0,PW,108,'F');
-  txt(lat('AGILIDAD EP - INTELIGENCIA COLABORATIVA'),M,34,{b:1,s:9,c:[158,193,232]});
-  txt(lat('¿Qué interacciones entre áreas debemos mejorar primero?'),M,62,{b:1,s:19,c:[255,255,255]});
-  txt(lat(`Resumen de las postulaciones recibidas - ${fecha}`),M,86,{s:10.5,c:[217,230,245]});
-  // Indicadores
-  const areas=conteoAreas();
-  const kpis=[[filas.length,'postulaciones'],[grupos.length,'propuestas agrupadas'],[areas.length,'áreas mencionadas']];
-  let y=132;const kw=(W-2*12)/3;
-  kpis.forEach(([n,l],i)=>{const x=M+i*(kw+12);doc.setFillColor(...ROW);doc.roundedRect(x,y,kw,52,6,6,'F');txt(String(n),x+14,y+33,{b:1,s:24,c:NAVY});doc.setFont('helvetica','bold');doc.setFontSize(24);const nw=doc.getTextWidth(String(n));txt(lat(l),x+22+nw,y+31,{s:10,c:GREY})});
-  y+=76;
-  // Áreas más mencionadas
-  txt(lat('ÁREAS MÁS MENCIONADAS'),M,y,{b:1,s:9.5,c:BLUE});y+=12;
-  const top=areas.slice(0,6),max=Math.max(1,...top.map(a=>a.n));
-  const colW=(W-24)/2;
-  top.forEach((a,i)=>{const col=i<3?0:1,row=i%3;const x=M+col*(colW+24),yy=y+row*18;
-    txt(lat(recorta(a.label,24)),x,yy+9,{s:9.5});
-    const bx=x+120,bw=colW-120-24;doc.setFillColor(...MIST);doc.roundedRect(bx,yy+2,bw,8,4,4,'F');doc.setFillColor(...BLUE);doc.roundedRect(bx,yy+2,Math.max(8,bw*a.n/max),8,4,4,'F');
-    txt(String(a.n),x+colW,yy+9,{b:1,s:9.5,a:'right'})});
-  y+=Math.min(3,Math.max(1,top.length))*18+20;
-  // Propuestas priorizadas
-  txt(lat('PROPUESTAS PRIORIZADAS POR NÚMERO DE POSTULACIONES'),M,y,{b:1,s:9.5,c:BLUE});y+=10;
-  const bottomLimit=PH-118;let shown=0;
-  for(let i=0;i<grupos.length;i++){
-    const g=grupos[i];
-    const title=wrap(nombres[g.id]||g.rep.interaccion,W-120,11,true).slice(0,2);
-    const meta=wrap(`${g.items.length} ${g.items.length>1?'postulaciones':'postulación'} - Áreas: ${g.areas.join(', ')}`,W-120,9,false).slice(0,2);
-    const imp=g.items.map(f=>f.impacto).filter(Boolean)[0];
-    const quote=imp?wrap('"'+recorta(imp,220)+'"',W-120,9,false).slice(0,2):[];
-    const h=14+title.length*13+meta.length*11+quote.length*11+8;
-    if(y+h>bottomLimit)break;
-    doc.setFillColor(...(i%2?[255,255,255]:ROW));doc.rect(M,y,W,h,'F');
-    doc.setFillColor(...NAVY);doc.circle(M+18,y+18,10,'F');txt(String(i+1),M+18,y+21.5,{b:1,s:10,c:[255,255,255],a:'center'});
-    let ty=y+18;doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(...INK);doc.text(title,M+40,ty);ty+=title.length*13;
-    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...GREY);doc.text(meta,M+40,ty);ty+=meta.length*11;
-    if(quote.length){doc.setFont('helvetica','italic');doc.setTextColor(...INK);doc.text(quote,M+40,ty)}
-    doc.setDrawColor(...GREY);doc.setLineWidth(0.8);doc.rect(PW-M-54,y+8,44,20);
-    y+=h+4;shown++;
+  const personas=new Set(filas.map(f=>persona(f.postulante)).filter(Boolean)).size;
+  const kids=[];
+  kids.push(par(run('AGILIDAD EP · INTELIGENCIA COLABORATIVA',{s:9,b:1,c:BLUE}),{after:60}));
+  kids.push(par(run('Resumen de postulaciones para células ágiles',{s:20,b:1,c:NAVY}),{after:60}));
+  kids.push(par(run(`${fecha} · ${filas.length} respuestas de ${personas} personas · ${gs.length} propuestas`,{s:10,c:GREY}),{after:240}));
+  // Todas las respuestas
+  kids.push(par(run('1. Todas las respuestas',{s:14,b:1,c:NAVY}),{after:120}));
+  const head=['#','Postulado por','Interacción a mejorar','Áreas involucradas','Por qué es de alto impacto'];
+  const widths=[500,1800,2900,2200,3040];
+  const rows=[new D.TableRow({tableHeader:true,children:head.map((h,i)=>cell(h,{b:1,c:'FFFFFF',fill:NAVY,w:widths[i]}))})];
+  filas.slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha))).forEach((f,i)=>{
+    rows.push(new D.TableRow({children:[String(i+1),f.postulante,f.interaccion,f.areas,f.impacto].map((t,j)=>cell(t,{w:widths[j],fill:i%2?undefined:'F2F4F7'}))}));
+  });
+  kids.push(new D.Table({rows,width:{size:10440,type:D.WidthType.DXA},columnWidths:widths}));
+  kids.push(par(run('Si una persona envió la misma respuesta más de una vez, su voto se cuenta una sola vez.',{s:8.5,i:1,c:GREY}),{before:80,after:280}));
+  // Desglose agrupado
+  kids.push(par(run('2. Desglose agrupado',{s:14,b:1,c:NAVY}),{after:120}));
+  gs.forEach((g,i)=>{
+    kids.push(par([run(`${i+1}. ${g.nombre}`,{s:12.5,b:1,c:NAVY}),run(`   ${g.votantes.length} ${g.votantes.length===1?'voto':'votos'}`,{s:11,b:1,c:BLUE})],{before:160,after:60}));
+    kids.push(par(run(g.desc,{s:10}),{after:80}));
+    kids.push(par(run('Incluye:',{s:9.5,b:1,c:GREY}),{after:40}));
+    const vistos=new Set();
+    g.items.forEach(f=>{const k=persona(f.postulante)+'|'+key(f.interaccion);if(vistos.has(k))return;vistos.add(k);kids.push(par(run(f.interaccion,{s:10}),{bullet:1,after:30}))});
+    g.extra.forEach(f=>kids.push(par(run(f.interaccion+' (relacionado; su voto cuenta en otro grupo)',{s:10,i:1}),{bullet:1,after:30})));
+    kids.push(par([run('Votaron: ',{s:10,b:1}),run(g.votantes.join(', ')||'—',{s:10})],{before:60,after:80}));
+    const sel=complejidad[g.id];const nivel=CX.indexOf(sel)+1;
+    kids.push(new D.Table({width:{size:6000,type:D.WidthType.DXA},columnWidths:[1500,1500,1500,1500],rows:[new D.TableRow({children:[
+      cell('Complejidad',{b:1,w:1500}),
+      ...CX.map((nv,k)=>cell((nv===sel?'☒ ':'☐ ')+nv,{w:1500,fill:k<nivel?'BCD4EE':undefined,b:nv===sel}))
+    ]})]}));
+  });
+  if(otras.length){
+    kids.push(par(run('Otras postulaciones (sin grupo todavía)',{s:12.5,b:1,c:NAVY}),{before:200,after:60}));
+    otras.forEach(f=>kids.push(par(run(f.interaccion+(f.postulante?' — '+f.postulante:''),{s:10}),{bullet:1,after:30})));
   }
-  if(shown<grupos.length)txt(lat(`+ ${grupos.length-shown} propuestas más, con 1 postulación cada una o menos votadas. Detalle completo en la página de resultados.`),M,y+8,{s:8.5,c:GREY});
-  // Decisión
-  const dy=PH-100;
-  doc.setFillColor(...NAVY);doc.roundedRect(M,dy,W,64,6,6,'F');
-  txt(lat('DECISIÓN DEL COMITÉ'),M+16,dy+22,{b:1,s:9.5,c:[158,193,232]});
-  txt(lat('Marca 1 o 2 propuestas para la primera ola de células ágiles (100 días).'),M+16,dy+40,{s:10.5,c:[255,255,255]});
-  txt(lat('Criterios: 3 áreas o más - recursos acotados - se resuelve en 100 días - objetivo claro, el cómo por descubrir.'),M+16,dy+55,{s:8.5,c:[217,230,245]});
-  txt(lat('Agilidad EP - Fuente: formulario de postulación de interacciones'),M,PH-20,{s:8,c:GREY});
-  doc.save('resumen-postulaciones-celulas.pdf');
+  kids.push(par(run('Decisión del comité: marquen 1 o 2 propuestas para la primera ola de células ágiles (100 días) y su nivel de complejidad.',{s:10,b:1,c:NAVY}),{before:280}));
+  const doc=new D.Document({creator:'Agilidad EP',title:'Resumen de postulaciones',styles:{default:{document:{run:{font:F}}}},
+    sections:[{properties:{page:{margin:{top:900,bottom:900,left:900,right:900}}},children:kids}]});
+  const blob=await D.Packer.toBlob(doc);
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='resumen-postulaciones-celulas.docx';document.body.appendChild(a);a.click();a.remove();
 };
 
 let firma='';
